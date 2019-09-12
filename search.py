@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -72,6 +72,43 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def generalGraphSearch(problem, fringe, search):
+    """
+    Defines a general algorithm to search a graph.
+    Parameters are structure, which can be any data structure with .push() and .pop() methods, and problem, which is the
+    search problem.
+    """
+    visited = []
+
+    if search == "uniformCost":
+        start_node = (problem.getStartState(), 0, [])
+        fringe.push(start_node, 0)
+
+        while not fringe.isEmpty():
+            state, cost, path = fringe.pop()
+            if problem.isGoalState(state): return path
+            if state not in visited:
+                visited.append(state)
+                successors = problem.getSuccessors(state)
+                for child_state, action, action_cost in successors:
+                    child_cost = cost + action_cost
+                    child_node = (child_state, child_cost, path + [action])
+                    fringe.push(child_node, child_cost)
+    else:
+        start_node = (problem.getStartState(), [])
+        fringe.push(start_node)
+
+        while not fringe.isEmpty():
+            state, path = fringe.pop()
+            if problem.isGoalState(state): return path
+            if state not in visited:
+                visited.append(state)
+                successors = problem.getSuccessors(state)
+                for child_state, action, action_cost in successors:
+                    child_node = (child_state, path + [action])
+                    fringe.push(child_node)
+
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -87,17 +124,23 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.Stack()
+    return generalGraphSearch(problem, fringe, "depthFirst")
+    # util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.Queue()
+    return generalGraphSearch(problem, fringe, "breadthFirst")
+    # util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.PriorityQueue()
+    return generalGraphSearch(problem, fringe, "uniformCost")
+    # util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
@@ -109,7 +152,30 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = []
+    fringe = util.PriorityQueue()
+    start_state = ([(problem.getStartState(), 'STOP', 0)], 0)
+    fringe.push(start_state, 0)
+
+    while not fringe.isEmpty():
+        current_path = fringe.pop()
+        current_state = current_path[0][len(current_path[0]) - 1]
+
+        if not current_state[0] in visited:
+            visited.append(current_state[0])
+
+            if problem.isGoalState(current_state[0]):
+                return map(lambda state: state[1], current_path[0][1:])
+
+            non_visited_states = filter(lambda next_successor: not next_successor[0] in visited,
+                                        problem.getSuccessors(current_state[0]))
+
+            for successor in non_visited_states:
+                cost = current_path[1] + successor[2]
+                next_item = (list(current_path[0]), cost)
+                next_item[0].append(successor)
+                fringe.push(next_item, cost + heuristic(successor[0], problem))
+    # util.raiseNotDefined()
 
 
 # Abbreviations

@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -295,14 +295,25 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        x,y = self.startingPosition
+        return (x, y, 0), list([])
+        # util.raiseNotDefined()
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        coordinates, corners = state
+        x, y, cost = coordinates
+
+
+        if (x, y) in self.corners:
+            if (x, y) not in corners:
+                corners.append((x, y))
+
+        return len(corners) == 4 and (x,y) in self.corners
+        # util.raiseNotDefined()
 
     def getSuccessors(self, state):
         """
@@ -325,6 +336,13 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+
+            if not self.walls[nextx][nexty]:
+                next_state = ((nextx, nexty, len(corners)), list(corners))
+                cost = self.costFn(next_state)
+                successors.append((next_state, action, cost))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -360,7 +378,20 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    cornerPos1, cornerPos2, cornerPos3, cornerPos4 = corners
+    xPos1, yPos1 = cornerPos1
+    xPos2, yPos2 = cornerPos2
+    xPos3, yPos3 = cornerPos3
+    xPos4, yPos4 = cornerPos4
+    location, corner1, corner2, corner3, corner4 = state
+    x, y = location
+    top, right = walls.height-2, walls.width-2
+
+    heuristic = 0
+    diff1 = abs(xPos1-x)+abs(yPos1-y) if not corner1 else 0
+    diff2 = abs(xPos2-x)+abs(yPos2-y) if not corner2 else 0
+    diff3 = abs(xPos3-x)+abs(yPos3-y) if not corner3 else 0
+    diff4 = abs(xPos4-x)+abs(yPos4-y) if not corner4 else 0
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -454,6 +485,26 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    x, y = position
+    foodList = list(foodGrid.asList())
+    maxX = 0
+    maxY = 0
+    minX = 0
+    minY = 0
+
+    for item in foodList:
+        foodX, foodY = item
+        xDistance = foodX - x
+        yDistance = foodY - y
+        if xDistance > maxX:
+            maxX = xDistance
+        elif xDistance < minX:
+            minX = xDistance
+        if yDistance > maxY:
+            maxY = yDistance
+        elif yDistance < minY:
+            minY = yDistance
+    return maxX - minX + maxY - minY
     return 0
 
 class ClosestDotSearchAgent(SearchAgent):
