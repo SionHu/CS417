@@ -295,7 +295,7 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.startingPosition, False, False, False, False
+        return (self.startingPosition, set())
         # util.raiseNotDefined()
 
     def isGoalState(self, state):
@@ -303,8 +303,7 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        location, corner1, corner2, corner3, corner4 = state
-        return corner1 and corner2 and corner3 and corner4
+        return len(self.corners) == len(state[1])
         # util.raiseNotDefined()
 
     def getSuccessors(self, state):
@@ -319,9 +318,9 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
-        currentPosition, corner1, corner2, corner3, corner4 = state
-        x,y = currentPosition
-        top, right = self.walls.height-2, self.walls.width-2
+        # currentPosition, corner1, corner2, corner3, corner4 = state
+        # x,y = currentPosition
+        # top, right = self.walls.height-2, self.walls.width-2
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
@@ -331,12 +330,16 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            (x, y), visited_corners = state
             dx, dy = Actions.directionToVector(action)
-            nextx, nexty = int(x + dx), int(y + dy)
-            if not self.walls[nextx][nexty]:
-                nextPosition = (nextx, nexty)
-                nextState = (nextPosition, True if nextPosition == (1,1) else corner1, True if nextPosition == (1,top) else corner2, True if nextPosition == (right, 1) else corner3, True if nextPosition == (right, top) else corner4)
-                successors.append((nextState, action, 1))
+            x, y = int(x + dx), int(y + dy)
+
+            if not self.walls[x][y]:
+                if (x, y) in self.corners:
+                    visited_corners = visited_corners.copy()
+                    visited_corners.add((x, y))
+                successor_state = ((x, y), visited_corners)
+                successors.append((successor_state, action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -372,24 +375,34 @@ def cornersHeuristic(state, problem):
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
+    
+    current_position, visited_corners = state
+    corners_left = set()
 
-    "*** YOUR CODE HERE ***"
-    cornerPos1, cornerPos2, cornerPos3, cornerPos4 = corners
-    xPos1, yPos1 = cornerPos1
-    xPos2, yPos2 = cornerPos2
-    xPos3, yPos3 = cornerPos3
-    xPos4, yPos4 = cornerPos4
-    location, corner1, corner2, corner3, corner4 = state
-    x, y = location
-    top, right = walls.height-2, walls.width-2
+    for corner in corners:
+        if corner not in visited_corners:
+            corners_left.add(corner)
 
-    heuristic = 0
-    diff1 = abs(xPos1-x)+abs(yPos1-y) if not corner1 else 0
-    diff2 = abs(xPos2-x)+abs(yPos2-y) if not corner2 else 0
-    diff3 = abs(xPos3-x)+abs(yPos3-y) if not corner3 else 0
-    diff4 = abs(xPos4-x)+abs(yPos4-y) if not corner4 else 0
+    def distanceBetween(p1, p2):
+        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    return max([diff1, diff2, diff3, diff4])
+    result = 0
+
+    while len(corners_left) > 0:
+        min_corner = None
+        min_distance = 0
+
+        for corner in corners_left:
+            distance = distanceBetween(corner, current_position)
+            if min_corner == None or distance < min_distance:
+                min_corner = corner
+                min_distance = distance
+
+        result += min_distance
+        corners_left.remove(min_corner)
+        current_position = min_corner
+
+    return result
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -485,10 +498,7 @@ def foodHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     x, y = position
     foodList = list(foodGrid.asList())
-    maxX = 0
-    maxY = 0
-    minX = 0
-    minY = 0
+    maxX, maxY, minX, minY = 0, 0, 0, 0
 
     for item in foodList:
         foodX, foodY = item
