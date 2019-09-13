@@ -91,8 +91,8 @@ def generalGraphSearch(problem, fringe, search):
                 visited.append(state)
                 successors = problem.getSuccessors(state)
                 for child_state, action, action_cost in successors:
-                    child_cost = cost + action_cost
                     child_node = (child_state, child_cost, path + [action])
+                    child_cost = cost + action_cost
                     fringe.push(child_node, child_cost)
     else:
         start_node = (problem.getStartState(), [])
