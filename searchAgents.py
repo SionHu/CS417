@@ -375,7 +375,7 @@ def cornersHeuristic(state, problem):
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-    
+
     current_position, visited_corners = state
     corners_left = set()
 
@@ -387,7 +387,6 @@ def cornersHeuristic(state, problem):
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
     result = 0
-
     while len(corners_left) > 0:
         min_corner = None
         min_distance = 0
