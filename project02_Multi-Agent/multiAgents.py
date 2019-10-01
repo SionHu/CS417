@@ -76,20 +76,20 @@ class ReflexAgent(Agent):
         "*** YOUR CODE HERE ***"
         currPos = successorGameState.getPacmanPosition()
         currFoodList = currentGameState.getFood().asList() # store curr available food locations
-        distance = -9999999 # value will be returned eventually
+        dist = -9999999 # value will be returned eventually
 
-        if action == 'Stop': return distance
+        if action == 'Stop': return dist
 
         # when the distance between food and agent is small, score gets rewarded
         for food in currFoodList:
-            distance = -1 * (abs(currPos[0] - food[0]) + abs(currPos[1] - food[1]))
+            dist = -1 * (abs(currPos[0] - food[0]) + abs(currPos[1] - food[1]))
 
         # whne the ghost meats the pacman, score is bad
         for state in newGhostStates:
             if state.getPosition() == currPos:
                 return -9999999 # returns extemly negative to kill this possibility
 
-        return distance
+        return dist
         # return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
@@ -145,19 +145,69 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def maxValue(gameState, depth, agentcounter, decision):
+            maximum = ["", -float("inf")]
+            actions = gameState.getLegalActions(agentcounter)
+
+            if not actions:
+                return self.evaluationFunction(gameState)
+
+            for action in actions:
+                currState = gameState.generateSuccessor(agentcounter, action)
+                current = minOrMax(currState, depth, agentcounter + 1)
+                if type(current) is not list:
+                    newVal = current
+                else:
+                    newVal = current[1]
+                if newVal > maximum[1]:
+                    maximum = [action, newVal]
+            return maximum
+
+        def minValue(gameState, depth, agentcounter, decision):
+            minimum = ["", float("inf")]
+            actions = gameState.getLegalActions(agentcounter)
+
+            if not actions:
+                return self.evaluationFunction(gameState)
+
+            for action in actions:
+                currState = gameState.generateSuccessor(agentcounter, action)
+                current = minOrMax(currState, depth, agentcounter + 1)
+                if type(current) is not list:
+                    newVal = current
+                else:
+                    newVal = current[1]
+                if newVal < minimum[1]:
+                    minimum = [action, newVal]
+            return minimum
+
+        def minOrMax(gameState, depth, agentcounter):
+            if agentcounter >= gameState.getNumAgents():
+                depth += 1
+                agentcounter = 0
+
+            if (depth == self.depth or gameState.isWin() or gameState.isLose()):
+                return self.evaluationFunction(gameState)
+            elif (agentcounter == 0):
+                return maxValue(gameState, depth, agentcounter, "max")
+            else:
+                return minValue(gameState, depth, agentcounter, "min")
+
+        actionsList = minOrMax(gameState, 0, 0)
+        return actionsList[0]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
     """
-
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        # util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
