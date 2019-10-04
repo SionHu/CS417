@@ -260,13 +260,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def getValue(self, state, prevAgentIndex, depth):
         agentIndex = (prevAgentIndex + 1) % state.getNumAgents()
         legalActions = state.getLegalActions(agentIndex)
-
+        bestValue = 0.0
         if depth == self.depth or len(legalActions) == 0:
             score = self.evaluationFunction(state)
             return score
-
-        bestValue = 0.0
-
         if agentIndex == 0:
             # "Max value, increment depth"
             bestValue = -9999999
@@ -276,7 +273,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     bestValue = v
         else:
             # "Do expected value"
-            if (agentIndex + 1) == state.getNumAgents():
+            if agentIndex == state.getNumAgents() - 1:
                 depth += 1
 
             for action in legalActions:
@@ -335,10 +332,14 @@ def betterEvaluationFunction(currentGameState):
     closestGhost = float(min([util.manhattanDistance(currPos, ghostPos) for ghostPos in currGhostPos]))
     closestPow = float(min([len(currPower)] + [util.manhattanDistance(powerPos, currPos) for powerPos in currPower]))
 
+    if len(currFood.asList()) == 0: food_score = 1
+    else: food_score = 1/closestFood
 
-    food_score = 1 if len(currFood.asList())==0 else 1/closestFood
-    power_score = 1 if len(currPower)==0 else 1/closestPow
-    ghost_score = -100 if closestGhost < 1 else 1/closestGhost #*100 if isScared else closestGhost
+    if len(currPower) == 0: power_score = 1
+    else: power_score =  1/closestPow
+
+    if closestGhost < 1: ghost_score = -100
+    else: ghost_score = 1/closestGhost
 
     if isScared and closestGhost < max(scaredTimes):
         ghost_temp = 100
