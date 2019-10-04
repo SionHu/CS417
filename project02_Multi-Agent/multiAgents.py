@@ -200,59 +200,57 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return self.evaluationFunction(gameState)
 
         legalActions = gameState.getLegalActions()
-        v = - float('inf')
+        temp = - 9999999
         for action in legalActions:
             successorState = gameState.generateSuccessor(self.index, action)
-            v = max(v, self.minNode(successorState, numGhosts, plyCounter, alpha, beta))
-            if v > beta:
-                return v
-            alpha = max(alpha, v)
-        return v
+            temp = max(temp, self.getValue(successorState, numGhosts, plyCounter, alpha, beta))
+            if temp > beta:
+                return temp
+            alpha = max(alpha, temp)
+        return temp
 
-    def minNode(self, gameState, numGhosts, plyCounter, alpha, beta):
+    def getValue(self, gameState, numGhosts, plyCounter, alpha, beta):
         if gameState.isWin() or gameState.isLose() or plyCounter == 0:
             return self.evaluationFunction(gameState)
 
         totalNumGhosts = gameState.getNumAgents() - 1
         currentGhostIndex = totalNumGhosts - numGhosts + 1
         legalActions = gameState.getLegalActions(currentGhostIndex)
-        v = float('inf')
+        temp = 9999999
         if numGhosts > 1:
             for action in legalActions:
                 successorState = gameState.generateSuccessor(currentGhostIndex, action)
-                v = min(v, self.minNode(successorState, numGhosts - 1, plyCounter, alpha, beta))
-                if v < alpha:
-                    return v
-                beta = min(beta, v)
+                temp = min(temp, self.getValue(successorState, numGhosts - 1, plyCounter, alpha, beta))
+                if temp < alpha:
+                    return temp
+                beta = min(beta, temp)
         else:
             for action in legalActions:
                 successorState = gameState.generateSuccessor(currentGhostIndex, action)
-                v = min(v, self.maxNode(successorState, totalNumGhosts, plyCounter - 1, alpha, beta))
-                if v < alpha:
-                    return v
-                beta = min(beta, v)
-        return v
+                temp = min(temp, self.maxNode(successorState, totalNumGhosts, plyCounter - 1, alpha, beta))
+                if temp < alpha:
+                    return temp
+                beta = min(beta, temp)
+        return temp
 
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        actions = []
-        evaluations = []
+        actions, evaluations = [], []
 
-        alpha = - float('inf')
-        beta = float('inf')
-        v = - float('inf')
+        alpha, beta = -9999999, 9999999
+        temp = - 9999999
         for action in gameState.getLegalActions():
             actions.append(action)
             numGhosts = gameState.getNumAgents() - 1
             successorState = gameState.generateSuccessor(self.index, action)
-            v = max(v, self.minNode(successorState, numGhosts, self.depth, alpha, beta))
-            if v > beta:
-                return v
-            alpha = max(alpha, v)
+            temp = max(temp, self.getValue(successorState, numGhosts, self.depth, alpha, beta))
+            if temp > beta:
+                return temp
+            alpha = max(alpha, temp)
 
-            evaluations.append(v)
+            evaluations.append(temp)
 
         maxEvaluationIndex = evaluations.index(max(evaluations))
         return actions[maxEvaluationIndex]
